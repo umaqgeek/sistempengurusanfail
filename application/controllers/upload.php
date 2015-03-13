@@ -1,82 +1,80 @@
-<?php
-class Upload extends CI_Controller 
-{		
- function __construct()
- {
-  parent::__construct();
-  $this->load->helper(array('form', 'url'));
-  $this->load->model('upload_model');
- }
- 
- function index()
- {
-  $this->load->view('upload_form', array('error' => ' ' ));
- }
- 
-  
-    public function view_file_upload()
-	{
-		$data = array( "result" => $this->db->get('uploads'));
-		
-		$this->load->view('view_file_db',$data);
-	}
-	
-	public function delete_file($id = "")
-	{
-		
-		$this->db->delete('uploads',array('id' => $id));
-		redirect('upload/view_file_upload');
-	}
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Upload extends CI_Controller {
 
 	
- 
- function do_upload()
- {
-  if($this->input->post('upload'))
-  {
-   $config['upload_path'] = './uploads/';
-   $config['allowed_types'] = 'pdf|docx|doc';
-   $config['max_size']    = '1024';
-   $config['max_width']  = '1024';
-   $config['max_height']  = '768';
-   $this->load->library('upload', $config);
-   if ( ! $this->upload->do_upload())
-   {
-    $error = array('error' => $this->upload->display_errors());
-    $this->load->view('upload_form', $error);
-   }
-   else
-   {
-    $data=$this->upload->data();
-    $this->thumb($data);
-    $file=array(
-    'img_name'=>$data['raw_name'],
-    'thumb_name'=>$data['raw_name'].'_thumb',
-    'ext'=>$data['file_ext'],
-    'upload_date'=>date('d-m-Y')
-     );
-    $this->upload_model->add_image($file);
-    $data = array('upload_data' => $this->upload->data());
-    $this->load->view('upload_success', $data);
-   }
-  }
-  else
-  {
-    redirect(site_url('upload'));
-  }
+	public function index()
+	{
+		$this->load->view('index');
+	}
+	
+	function files()
+	{
+	 $this->load->model('file_model','b');
+	 $this->load->view('files');
+	 
+	}
+	
+	public function delete_file($file_id)
+	{
+	  $this->load->model('file_model');
+		if($this->file_model->delete_file($file_id))
+		{
+			redirect('upload/files');
+		}
+		else
+		{
+			echo "error";
+		}
+	}
+	
+	public function upload_file()
+	{
+      $status = "";
+	  $msg = "";
+	  $filename = 'product_pic';
+	  
+	  if(empty($_POST['title']))
+	  {
+		$status="error";
+		$msg ="Plese Enter title";
+	  }
+	  
+	  if($status != "error")
+	  {
+		$config['upload_path'] = 'file/';
+		$config['allowed_types'] = 'pdf|doc|docx';
+        $config['max_size']    = 1024*8;
+        $config['encrypt_name'] = true; 
+		
+		$this->load->library('upload',$config);
+		
+		if(!$this->upload->do_upload($filename))
+		{
+		 $status = 'error';
+		 $msg = $this->upload->display_errors('','');
+		}
+		else
+		{
+	      $this->load->model('file_model');
+		  $data = $this->upload->data();
+		  $file_id = $this->file_model->insert_file($data['file_name'],$_POST['title']);
+		  if($file_id)
+		  {
+		    redirect('upload/index');
+		  }
+		  else
+		  {
+			  unlink($data['full_path']);
+			  $status = "error";
+			  $msg = "Please try again";
+			  
+		  }
+		  
+		}
+		@unlink($_FILES[$filename]);
+	  }
+	  echo json_encode(array('status'=>$status, 'msg'=>$msg));
+	}
 }
 
- function thumb($data)
- {
-  $config['image_library'] = 'gd2';
-  $config['source_image'] =$data['full_path'];
-  $config['create_thumb'] = TRUE;
-  $config['maintain_ratio'] = TRUE;
-  $config['width'] = 275;
-  $config['height'] = 250;
-  $this->load->library('image_lib', $config);
-  $this->image_lib->resize();
- }
- 
- 
-}
