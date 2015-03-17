@@ -7,11 +7,14 @@
 
 <body>
 <BR><BR><BR>
-<A href="<?php echo base_url('index.php/upload/index')?>">
+<A href="<?php echo base_url('upload/index')?>">
 <center><input type="button" value="Upload Another Files" /> </A>
 &nbsp;&nbsp &nbsp;
-<A href="<?php echo base_url('index.php/download')?>">
-<input type="button" value="Download Files " /></center> </A>
+<A href="<?php echo base_url('download')?>">
+<input type="button" value="Download Files" /> </A>
+&nbsp;&nbsp &nbsp;
+<A href="<?php echo base_url('search/search_keyword')?>">
+<input type="button" value="Search Files" /></center> </A>
 <BR><BR><BR>
 
 <table style="border:1px solid #000; width:50%; height:50%; overflow:auto; text-align:center; " align="center">
